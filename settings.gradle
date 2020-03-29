@@ -1,0 +1,2 @@
+rootProject.name='alzheimer_tracking'
+include ':app'
