@@ -2,6 +2,7 @@ package com.rifaikuci.alzheimer_tracking;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -19,7 +20,7 @@ import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button btnBilgilerim,btnKisilerim,btnHarita,btnHakkimda;
+    Button btnBilgilerim, btnKisilerim, btnHarita, btnHakkimda;
 
     TextView txtTarih;
 
@@ -31,59 +32,56 @@ public class MainActivity extends AppCompatActivity {
         variableDesc();
 
 
-
-
         txtTarih.setText(getCurrentTime().toString());
 
         btnBilgilerim.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Bilgilerim",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Bilgilerim", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnKisilerim.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Kişilerim",Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(getApplicationContext(), Kisiler.class);
+                startActivity(intent);
             }
         });
 
         btnHarita.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Harita",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Harita", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnHakkimda.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(),"Hakkımda",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Hakkımda", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     //ekranı transpan yapar
-    public  void transparanEkran(){
-        if(Build.VERSION.SDK_INT>=19)
-        {
+    public void transparanEkran() {
+        if (Build.VERSION.SDK_INT >= 19) {
             getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        }
-        else
-        {
+        } else {
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         }
     }
 
-    public  void variableDesc(){
+    public void variableDesc() {
 
         btnBilgilerim = (Button) findViewById(R.id.btnBilgilerim);
-        btnKisilerim  = (Button) findViewById(R.id.btnKisilerim);
-        btnHarita     = (Button) findViewById(R.id.btnHarita);
-        btnHakkimda   = (Button) findViewById(R.id.btnHakkimda);
+        btnKisilerim = (Button) findViewById(R.id.btnKisilerim);
+        btnHarita = (Button) findViewById(R.id.btnHarita);
+        btnHakkimda = (Button) findViewById(R.id.btnHakkimda);
 
-        txtTarih      = (TextView) findViewById(R.id.txtTarih);
+        txtTarih = (TextView) findViewById(R.id.txtTarih);
 
     }
 
@@ -91,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Tarih yazdırma
     public static String getCurrentTime() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_1,new Locale("TR"));
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT_1, new Locale("TR"));
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date today = Calendar.getInstance().getTime();
         return dateFormat.format(today);
