@@ -3,9 +3,15 @@ package com.rifaikuci.alzheimer_tracking;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.view.WindowManager;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,15 +21,35 @@ public class Kisiler extends AppCompatActivity {
     ViewPager viewPager;
     Adapter adapter;
     List<ModelKisiler> models;
+    FloatingActionButton btnKisiEkle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_kisiler);
+        btnKisiEkle = (FloatingActionButton) findViewById(R.id.btnKisiEkle);
         transparanEkran();
 
         models = new ArrayList<>();
-        models.add(new ModelKisiler("Meyso Betül Şafak", "Rifainin Eşi", R.drawable.ic_launcher_background));
+
+        SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+
+        Cursor cursor = database.rawQuery("Select * From tblKisiler ORDER BY id DESC", null);
+        int idIx = cursor.getColumnIndex("id");
+        int adSoyadIx = cursor.getColumnIndex("adSoyad");
+        int aciklamaIx = cursor.getColumnIndex("aciklama");
+        int telefonIx = cursor.getColumnIndex("telefon");
+        int mailIx = cursor.getColumnIndex("mail");
+        int resim = cursor.getColumnIndex("resim");
+
+
+        while (cursor.moveToNext()) {
+            models.add(new ModelKisiler(cursor.getInt(idIx), cursor.getString(adSoyadIx), cursor.getString(aciklamaIx), cursor.getString(resim)));
+
+        }
+        cursor.close();
+
+        database.close();
 
         adapter = new Adapter(models, this);
         viewPager = findViewById(R.id.viewPager);
@@ -47,6 +73,15 @@ public class Kisiler extends AppCompatActivity {
 
             }
         });
+
+        btnKisiEkle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(),Kisi_ekle.class);
+                startActivity(intent);
+            }
+        });
+
     }
 
 

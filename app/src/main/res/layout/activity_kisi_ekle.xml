@@ -13,6 +13,7 @@
         android:scaleType="centerCrop"
         android:src="#4fb3bf" />
 
+
     <LinearLayout
         android:id="@+id/linearLayout"
         android:layout_width="match_parent"
@@ -25,7 +26,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:id="@+id/back"
+            android:id="@+id/linearBack"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="true"
@@ -87,14 +88,23 @@
                     android:textStyle="bold" />
 
                 <androidx.appcompat.widget.AppCompatImageView
-                    android:id="@+id/resim"
+                    android:id="@+id/image"
                     android:layout_width="250dp"
                     android:layout_height="250dp"
                     android:layout_gravity="center"
                     android:paddingTop="10dp"
                     android:src="@drawable/selection">
 
+
                 </androidx.appcompat.widget.AppCompatImageView>
+                <RelativeLayout
+                    android:id="@+id/relativeImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="40dp"
+                    android:layout_marginEnd="40dp"
+                    android:background="#696969" />
+
 
                 <EditText
                     android:id="@+id/txtAdsoyad"
@@ -114,6 +124,7 @@
                     android:textStyle="bold" />
 
                 <RelativeLayout
+                    android:id="@+id/relativeAdSoyad"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="40dp"
@@ -139,6 +150,7 @@
                     android:textStyle="bold" />
 
                 <RelativeLayout
+                    android:id="@+id/relativeAciklama"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="40dp"
@@ -163,6 +175,7 @@
                     android:textStyle="bold" />
 
                 <RelativeLayout
+                    android:id="@+id/relativeMail"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="40dp"
@@ -179,14 +192,16 @@
                     android:background="@android:color/transparent"
                     android:drawableEnd="@drawable/phone"
                     android:drawableTint="#696969"
-                    android:hint="Telefon Numarası Giriniz..."
+                    android:hint="0(5XX) XXX XXXX"
                     android:inputType="phone"
                     android:padding="15dp"
                     android:textColor="#191919"
                     android:textColorHint="#696969"
+
                     android:textStyle="bold" />
 
                 <RelativeLayout
+                    android:id="@+id/relativeTelefon"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="40dp"

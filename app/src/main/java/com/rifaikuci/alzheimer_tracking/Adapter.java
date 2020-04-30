@@ -1,6 +1,7 @@
 package com.rifaikuci.alzheimer_tracking;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,9 +49,9 @@ public class Adapter extends PagerAdapter {
         adSoyad = (TextView) view.findViewById(R.id.adSoyad);
         desc = (TextView) view.findViewById(R.id.desc);
 
-        image.setImageResource(models.get(position).getImage());
+        image.setImageURI(Uri.parse(models.get(position).getResim()));
         adSoyad.setText(models.get(position).getAdSoyad());
-        desc.setText(models.get(position).getDesc());
+        desc.setText(models.get(position).getAciklama());
 
         container.addView(view, 0);
 

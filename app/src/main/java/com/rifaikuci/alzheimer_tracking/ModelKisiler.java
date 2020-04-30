@@ -3,13 +3,31 @@ package com.rifaikuci.alzheimer_tracking;
 public class ModelKisiler {
 
     private String adSoyad;
-    private String desc;
-    private int image;
+    private String aciklama;
+    private String telefon;
+    private String mail;
+    private String resim;
+    private int id;
 
-    public ModelKisiler(String adSoyad, String desc, int image) {
+    public ModelKisiler(int id, String adSoyad, String aciklama, String resim ) {
         this.adSoyad = adSoyad;
-        this.desc = desc;
-        this.image = image;
+        this.aciklama = aciklama;
+        this.resim = resim;
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public ModelKisiler(String adSoyad, String aciklama, String resim) {
+        this.adSoyad = adSoyad;
+        this.aciklama = aciklama;
+        this.resim = resim;
     }
 
     public String getAdSoyad() {
@@ -20,19 +38,35 @@ public class ModelKisiler {
         this.adSoyad = adSoyad;
     }
 
-    public String getDesc() {
-        return desc;
+    public String getAciklama() {
+        return aciklama;
     }
 
-    public void setDesc(String desc) {
-        this.desc = desc;
+    public void setAciklama(String aciklama) {
+        this.aciklama = aciklama;
     }
 
-    public int getImage() {
-        return image;
+    public String getTelefon() {
+        return telefon;
     }
 
-    public void setImage(int image) {
-        this.image = image;
+    public void setTelefon(String telefon) {
+        this.telefon = telefon;
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
+
+    public String getResim() {
+        return resim;
+    }
+
+    public void setResim(String resim) {
+        this.resim = resim;
     }
 }

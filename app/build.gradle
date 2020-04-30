@@ -49,6 +49,8 @@ dependencies {
 
     dependencies {
         implementation 'com.github.captain-miao:optroundcardview:1.0.0'
+        api 'com.theartofdev.edmodo:android-image-cropper:2.8.+'
     }
+
 
 }
