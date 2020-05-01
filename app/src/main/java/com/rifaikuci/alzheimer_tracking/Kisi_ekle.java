@@ -5,11 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,18 +26,20 @@ import android.widget.Toast;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.lang.reflect.Type;
+import java.io.File;
 
 public class Kisi_ekle extends AppCompatActivity {
 
-    ImageView image;
+    ImageView image, imageTrash;
     TextView txtAdSoyad, txtAciklama, txtMail, txtTelefon;
-    Button btnKaydet;
-    String adSoyad, aciklama, mail, telefon, resim;
+    Button btnGonder;
+    String adSoyad, aciklama, mail, telefon, resim, adsoyadElement, aciklamaElement, resimElement, telefonElement, mailElement;
     RelativeLayout relativeAdsoyad, relativeAciklama, relativeMail, relativeTelefon, relativeImage;
     LinearLayout linearBack;
+    int idElement, id;
 
     Uri resultUri;
+    Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +48,15 @@ public class Kisi_ekle extends AppCompatActivity {
         transparanEkran();
         variableDesc();
 
+        int tur = intent.getIntExtra("tur", 0);
+
+        if (tur == 1) {
+            duzenleActivity();
+        } else {
+            btnGonder.setText("Ekle");
+            imageTrash.setVisibility(View.INVISIBLE);
+        }
+
         image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,10 +64,10 @@ public class Kisi_ekle extends AppCompatActivity {
             }
         });
 
-        btnKaydet.setOnClickListener(new View.OnClickListener() {
+        btnGonder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnKaydetClick();
+                btnGonderClick();
             }
         });
 
@@ -67,11 +79,98 @@ public class Kisi_ekle extends AppCompatActivity {
         });
     }
 
-    private void  linearBackClick(){
-        Intent intent = new Intent(getApplicationContext(),Kisiler.class);
+    private void duzenleActivity() {
+
+        imageTrash.setVisibility(View.VISIBLE);
+        btnGonder.setText("Güncelle");
+
+        try {
+
+            id = intent.getIntExtra("id", 0);
+            SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+
+            Cursor cursor = database.rawQuery("Select *from tblKisiler where id='" + id + "'", null);
+
+            int idIx = cursor.getColumnIndex("id");
+            int adSoyadIx = cursor.getColumnIndex("adSoyad");
+            int aciklamaIx = cursor.getColumnIndex("aciklama");
+            int telefonIx = cursor.getColumnIndex("telefon");
+            int mailIx = cursor.getColumnIndex("mail");
+            int resim = cursor.getColumnIndex("resim");
+
+
+            while (cursor.moveToNext()) {
+                idElement = cursor.getInt(idIx);
+                adsoyadElement = cursor.getString(adSoyadIx);
+                aciklamaElement = cursor.getString(aciklamaIx);
+                resimElement = cursor.getString(resim);
+                telefonElement = cursor.getString(telefonIx);
+                mailElement = cursor.getString(mailIx);
+            }
+
+            cursor.close();
+            database.close();
+
+            txtAdSoyad.setText(adsoyadElement);
+            txtAciklama.setText(aciklamaElement);
+            txtMail.setText(mailElement);
+            txtTelefon.setText(telefonElement);
+            image.setImageURI(Uri.parse(resimElement));
+
+            imageTrash.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    imageTrashClick();
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void imageTrashClick() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(Kisi_ekle.this);
+
+        builder.setTitle("Uyarı");
+        builder.setMessage(adsoyadElement + " Kişisini silmek istediğinizden emin misiniz? ");
+
+        builder.setPositiveButton("Evet", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                SQLiteDatabase database = openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+
+                File dir = new File(Uri.parse(resimElement).getPath());
+                dir.delete();
+
+                String sqlTable = "Delete From tblKisiler where id='" + id + "'";
+                database.execSQL(sqlTable);
+
+                database.close();
+
+                linearBackClick();
+            }
+        });
+
+        builder.setNegativeButton("Hayır", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(getApplicationContext(), "Kişi silme işlemi iptal edildi", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+    private void linearBackClick() {
+        Intent intent = new Intent(getApplicationContext(), Kisiler.class);
         startActivity(intent);
     }
-    private void btnKaydetClick() {
+
+    private void btnGonderClick() {
 
         relativeDefault();
 
@@ -80,9 +179,11 @@ public class Kisi_ekle extends AppCompatActivity {
         mail = txtMail.getText().toString().trim();
         telefon = txtTelefon.getText().toString().trim();
 
-        try {  resim = resultUri.toString();  }
-
-        catch (Exception e) { resim = ""; }
+        try {
+            resim = resultUri.toString();
+        } catch (Exception e) {
+            resim = "";
+        }
 
 
         if (adSoyad.isEmpty() == true) {
@@ -105,14 +206,44 @@ public class Kisi_ekle extends AppCompatActivity {
             txtTelefon.setError("Telefon boş geçilemez!");
             relativeTelefon.setBackgroundColor(Color.RED);
 
-        } else if (resim.isEmpty() == true) {
-            Toast.makeText(getApplicationContext(), "Resim boş geçilemez", Toast.LENGTH_SHORT).show();
-            relativeImage.setBackgroundColor(Color.RED);
-
         } else {
-            if (telefon.charAt(0) != '0') { telefon = "0" + telefon; }
+            if (telefon.charAt(0) != '0') {
+                telefon = "0" + telefon;
+            }
 
-            databaseKaydet(adSoyad, aciklama, mail, telefon, resim);
+            if (btnGonder.getText().equals("Ekle")) {
+
+                if (resim.isEmpty() == true) {
+                    Toast.makeText(getApplicationContext(), "Resim boş geçilemez", Toast.LENGTH_SHORT).show();
+                    relativeImage.setBackgroundColor(Color.RED);
+
+                } else {
+                    databaseKaydet(adSoyad, aciklama, mail, telefon, resim);
+                }
+            } else {
+                SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+
+                String sqlGuncele = "";
+                if (resim.isEmpty()) {
+                    sqlGuncele = "UPDATE tblKisiler SET " +
+                            "adSoyad = '" + adSoyad + "',aciklama='" + aciklama + "',mail='" + mail + "',telefon='" + telefon + "' where id='" + id + "'";
+
+
+                } else {
+                    File dir = new File(Uri.parse(resimElement).getPath());
+                    dir.delete();
+                    sqlGuncele = "UPDATE tblKisiler SET " +
+                            "adSoyad = '" + adSoyad + "',aciklama='" + aciklama + "',mail='" + mail + "',telefon='" + telefon + "',resim ='" + resim + "' where id='" + id + "'";
+
+                }
+
+                database.execSQL(sqlGuncele);
+                Toast.makeText(getApplicationContext(), adSoyad + " Kişisi Güncellendi.", Toast.LENGTH_LONG).show();
+            }
+
+            Intent intent = new Intent(getApplicationContext(), Kisiler.class);
+            startActivity(intent);
+            temizle();
         }
     }
 
@@ -130,11 +261,10 @@ public class Kisi_ekle extends AppCompatActivity {
 
             Toast.makeText(getApplicationContext(), adSoyad + " Listeye eklendi.", Toast.LENGTH_LONG).show();
 
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-            temizle();
 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -147,7 +277,10 @@ public class Kisi_ekle extends AppCompatActivity {
 
     private void variableDesc() {
 
+        SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+
         image = (ImageView) findViewById(R.id.image);
+        imageTrash = (ImageView) findViewById(R.id.imageTrash);
 
         txtAdSoyad = (TextView) findViewById(R.id.txtAdsoyad);
         txtAciklama = (TextView) findViewById(R.id.txtAciklama);
@@ -156,13 +289,15 @@ public class Kisi_ekle extends AppCompatActivity {
 
         linearBack = (LinearLayout) findViewById(R.id.linearBack);
 
-        btnKaydet = (Button) findViewById(R.id.btnKaydet);
+        btnGonder = (Button) findViewById(R.id.btnGonder);
 
         relativeAdsoyad = (RelativeLayout) findViewById(R.id.relativeAdSoyad);
         relativeAciklama = (RelativeLayout) findViewById(R.id.relativeAciklama);
         relativeMail = (RelativeLayout) findViewById(R.id.relativeMail);
         relativeTelefon = (RelativeLayout) findViewById(R.id.relativeTelefon);
         relativeImage = (RelativeLayout) findViewById(R.id.relativeImage);
+
+        intent = getIntent();
 
     }
 

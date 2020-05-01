@@ -22,6 +22,7 @@
         android:orientation="horizontal"
         android:padding="45dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -47,9 +48,24 @@
                 android:textColor="#191919"
                 android:textSize="20sp"
                 android:textStyle="bold" />
+
+
         </LinearLayout>
+
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/imageTrash"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginRight="50dp"
+        android:foreground="?android:attr/selectableItemBackground"
+
+        android:src="@drawable/delete"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.github.captain_miao.optroundcardview.OptRoundCardView
         android:layout_width="match_parent"
@@ -192,7 +208,7 @@
                     android:background="@android:color/transparent"
                     android:drawableEnd="@drawable/phone"
                     android:drawableTint="#696969"
-                    android:hint="0(5XX) XXX XXXX"
+                    android:hint="05XXXXXXXXX"
                     android:inputType="phone"
                     android:padding="15dp"
                     android:textColor="#191919"
@@ -209,7 +225,7 @@
                     android:background="#696969" />
 
                 <Button
-                    android:id="@+id/btnKaydet"
+                    android:id="@+id/btnGonder"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:layout_marginStart="50dp"

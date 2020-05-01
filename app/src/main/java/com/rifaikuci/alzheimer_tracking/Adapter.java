@@ -1,6 +1,7 @@
 package com.rifaikuci.alzheimer_tracking;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +38,7 @@ public class Adapter extends PagerAdapter {
 
     @NonNull
     @Override
-    public Object instantiateItem(@NonNull ViewGroup container, int position) {
+    public Object instantiateItem(@NonNull ViewGroup container, final int position) {
 
         layoutInflater = LayoutInflater.from(context);
         View view = layoutInflater.inflate(R.layout.item, container, false);
@@ -52,6 +53,19 @@ public class Adapter extends PagerAdapter {
         image.setImageURI(Uri.parse(models.get(position).getResim()));
         adSoyad.setText(models.get(position).getAdSoyad());
         desc.setText(models.get(position).getAciklama());
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.out.println("Id bilgisi "+models.get(position).getId());
+                System.out.println("Id bilgisi "+models.get(position).getAciklama());
+                System.out.println("Id bilgisi "+models.get(position).getAdSoyad());
+                Intent intent = new Intent(context, Kisi_ekle.class);
+                intent.putExtra("id", models.get(position).getId());
+                intent.putExtra("tur", 1);
+                context.startActivity(intent);
+            }
+        });
 
         container.addView(view, 0);
 

@@ -9,12 +9,13 @@ public class ModelKisiler {
     private String resim;
     private int id;
 
-    public ModelKisiler(int id, String adSoyad, String aciklama, String resim ) {
+    public ModelKisiler(int id, String adSoyad, String aciklama, String resim) {
         this.adSoyad = adSoyad;
         this.aciklama = aciklama;
         this.resim = resim;
         this.id = id;
     }
+
 
     public int getId() {
         return id;
@@ -22,12 +23,6 @@ public class ModelKisiler {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public ModelKisiler(String adSoyad, String aciklama, String resim) {
-        this.adSoyad = adSoyad;
-        this.aciklama = aciklama;
-        this.resim = resim;
     }
 
     public String getAdSoyad() {

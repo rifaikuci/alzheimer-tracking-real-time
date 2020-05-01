@@ -27,28 +27,32 @@ public class Kisiler extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_kisiler);
-        btnKisiEkle = (FloatingActionButton) findViewById(R.id.btnKisiEkle);
         transparanEkran();
+
+        btnKisiEkle = (FloatingActionButton) findViewById(R.id.btnKisiEkle);
+
 
         models = new ArrayList<>();
 
         SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
 
         Cursor cursor = database.rawQuery("Select * From tblKisiler ORDER BY id DESC", null);
+
         int idIx = cursor.getColumnIndex("id");
         int adSoyadIx = cursor.getColumnIndex("adSoyad");
         int aciklamaIx = cursor.getColumnIndex("aciklama");
-        int telefonIx = cursor.getColumnIndex("telefon");
-        int mailIx = cursor.getColumnIndex("mail");
         int resim = cursor.getColumnIndex("resim");
 
 
         while (cursor.moveToNext()) {
-            models.add(new ModelKisiler(cursor.getInt(idIx), cursor.getString(adSoyadIx), cursor.getString(aciklamaIx), cursor.getString(resim)));
-
+            models.add(new ModelKisiler(
+                    cursor.getInt(idIx),
+                    cursor.getString(adSoyadIx),
+                    cursor.getString(aciklamaIx),
+                    cursor.getString(resim)));
         }
-        cursor.close();
 
+        cursor.close();
         database.close();
 
         adapter = new Adapter(models, this);
@@ -60,12 +64,10 @@ public class Kisiler extends AppCompatActivity {
         viewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
             }
 
             @Override
             public void onPageSelected(int position) {
-
             }
 
             @Override
@@ -77,13 +79,13 @@ public class Kisiler extends AppCompatActivity {
         btnKisiEkle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),Kisi_ekle.class);
+                Intent intent = new Intent(getApplicationContext(), Kisi_ekle.class);
+                intent.putExtra("tur", 0);
                 startActivity(intent);
             }
         });
 
     }
-
 
     public void transparanEkran() {
         if (Build.VERSION.SDK_INT >= 19) {
