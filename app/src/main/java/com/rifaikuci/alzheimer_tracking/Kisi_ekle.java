@@ -219,6 +219,9 @@ public class Kisi_ekle extends AppCompatActivity {
 
                 } else {
                     databaseKaydet(adSoyad, aciklama, mail, telefon, resim);
+
+                    linearBackClick();
+                    temizle();
                 }
             } else {
                 SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
@@ -227,23 +230,22 @@ public class Kisi_ekle extends AppCompatActivity {
                 if (resim.isEmpty()) {
                     sqlGuncele = "UPDATE tblKisiler SET " +
                             "adSoyad = '" + adSoyad + "',aciklama='" + aciklama + "',mail='" + mail + "',telefon='" + telefon + "' where id='" + id + "'";
-
+                    linearBackClick();
+                    temizle();
 
                 } else {
                     File dir = new File(Uri.parse(resimElement).getPath());
                     dir.delete();
                     sqlGuncele = "UPDATE tblKisiler SET " +
                             "adSoyad = '" + adSoyad + "',aciklama='" + aciklama + "',mail='" + mail + "',telefon='" + telefon + "',resim ='" + resim + "' where id='" + id + "'";
-
+                    linearBackClick();
+                    temizle();
                 }
 
                 database.execSQL(sqlGuncele);
                 Toast.makeText(getApplicationContext(), adSoyad + " Kişisi Güncellendi.", Toast.LENGTH_LONG).show();
             }
 
-            Intent intent = new Intent(getApplicationContext(), Kisiler.class);
-            startActivity(intent);
-            temizle();
         }
     }
 
@@ -332,7 +334,6 @@ public class Kisi_ekle extends AppCompatActivity {
         relativeMail.setBackgroundColor(Color.BLACK);
         relativeTelefon.setBackgroundColor(Color.BLACK);
         relativeImage.setBackgroundColor(Color.BLACK);
-
 
     }
 

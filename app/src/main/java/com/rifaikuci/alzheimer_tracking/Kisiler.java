@@ -31,29 +31,30 @@ public class Kisiler extends AppCompatActivity {
 
         btnKisiEkle = (FloatingActionButton) findViewById(R.id.btnKisiEkle);
 
-
         models = new ArrayList<>();
+        try {
+            SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
 
-        SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+            Cursor cursor = database.rawQuery("Select * From tblKisiler ORDER BY id DESC", null);
 
-        Cursor cursor = database.rawQuery("Select * From tblKisiler ORDER BY id DESC", null);
+            int idIx = cursor.getColumnIndex("id");
+            int adSoyadIx = cursor.getColumnIndex("adSoyad");
+            int aciklamaIx = cursor.getColumnIndex("aciklama");
+            int resim = cursor.getColumnIndex("resim");
 
-        int idIx = cursor.getColumnIndex("id");
-        int adSoyadIx = cursor.getColumnIndex("adSoyad");
-        int aciklamaIx = cursor.getColumnIndex("aciklama");
-        int resim = cursor.getColumnIndex("resim");
+            while (cursor.moveToNext()) {
+                models.add(new ModelKisiler(
+                        cursor.getInt(idIx),
+                        cursor.getString(adSoyadIx),
+                        cursor.getString(aciklamaIx),
+                        cursor.getString(resim)));
+            }
 
-
-        while (cursor.moveToNext()) {
-            models.add(new ModelKisiler(
-                    cursor.getInt(idIx),
-                    cursor.getString(adSoyadIx),
-                    cursor.getString(aciklamaIx),
-                    cursor.getString(resim)));
+            cursor.close();
+            database.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        cursor.close();
-        database.close();
 
         adapter = new Adapter(models, this);
         viewPager = findViewById(R.id.viewPager);

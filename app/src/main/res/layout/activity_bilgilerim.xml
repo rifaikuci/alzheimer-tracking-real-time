@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="#4fb3bf" />
+        android:src="#845EC2" />
 
 
     <LinearLayout
@@ -48,29 +48,14 @@
                 android:textColor="#191919"
                 android:textSize="20sp"
                 android:textStyle="bold" />
-
-
         </LinearLayout>
-
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/imageTrash"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="50dp"
-        android:layout_marginRight="50dp"
-        android:foreground="?android:attr/selectableItemBackground"
-
-        android:src="@drawable/delete"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <com.github.captain_miao.optroundcardview.OptRoundCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@drawable/backgroun"
+        android:background="@drawable/backgroun_bilgilerim"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -85,6 +70,7 @@
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@drawable/backgroun_bilgilerim"
             android:fillViewport="true">
 
             <LinearLayout
@@ -98,7 +84,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="30dp"
                     android:gravity="center"
-                    android:text="Kişi Bilgileri"
+                    android:text="Bilgilerim"
                     android:textColor="#191919"
                     android:textSize="25dp"
                     android:textStyle="bold" />
@@ -109,10 +95,7 @@
                     android:layout_height="250dp"
                     android:layout_gravity="center"
                     android:paddingTop="10dp"
-                    android:src="@drawable/selection">
-
-
-                </androidx.appcompat.widget.AppCompatImageView>
+                    android:src="@drawable/selection"/>
                 <RelativeLayout
                     android:id="@+id/relativeImage"
                     android:layout_width="match_parent"
@@ -120,6 +103,7 @@
                     android:layout_marginStart="40dp"
                     android:layout_marginEnd="40dp"
                     android:background="#696969" />
+
 
 
                 <EditText
@@ -138,14 +122,14 @@
                     android:textColor="#191919"
                     android:textColorHint="#696969"
                     android:textStyle="bold" />
-
                 <RelativeLayout
-                    android:id="@+id/relativeAdSoyad"
+                    android:id="@+id/relativeAdsoyad"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="40dp"
                     android:layout_marginEnd="40dp"
                     android:background="#696969" />
+
 
                 <EditText
                     android:id="@+id/txtAciklama"
@@ -157,14 +141,12 @@
                     android:background="@android:color/transparent"
                     android:drawableEnd="@drawable/users"
                     android:drawableTint="#696969"
-                    android:hint="Açıklama giriniz..."
+                    android:hint="Geçirdiğiniz hastalıkları ',' ayıracı ile giriniz..."
                     android:inputType="textMultiLine"
-
                     android:padding="15dp"
                     android:textColor="#191919"
                     android:textColorHint="#696969"
                     android:textStyle="bold" />
-
                 <RelativeLayout
                     android:id="@+id/relativeAciklama"
                     android:layout_width="match_parent"
@@ -172,6 +154,33 @@
                     android:layout_marginStart="40dp"
                     android:layout_marginEnd="40dp"
                     android:background="#696969" />
+
+
+                <EditText
+                    android:id="@+id/txtKonum"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginTop="30dp"
+                    android:layout_marginEnd="30dp"
+                    android:background="@android:color/transparent"
+                    android:drawableEnd="@drawable/map"
+                    android:drawableTint="#696969"
+                    android:hint="Konum bilgisi için harita ekranından değiştirebilirsiniz..."
+                    android:inputType="textMultiLine"
+                    android:enabled="false"
+                    android:padding="15dp"
+                    android:textColor="#191919"
+                    android:textColorHint="#696969"
+                    android:textStyle="bold" />
+                <RelativeLayout
+                    android:id="@+id/relativeKonum"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="40dp"
+                    android:layout_marginEnd="40dp"
+                    android:background="#696969" />
+
 
                 <EditText
                     android:id="@+id/txtMail"
@@ -189,7 +198,6 @@
                     android:textColor="#191919"
                     android:textColorHint="#696969"
                     android:textStyle="bold" />
-
                 <RelativeLayout
                     android:id="@+id/relativeMail"
                     android:layout_width="match_parent"
@@ -197,6 +205,7 @@
                     android:layout_marginStart="40dp"
                     android:layout_marginEnd="40dp"
                     android:background="#696969" />
+
 
                 <EditText
                     android:id="@+id/txtTelefon"
@@ -213,11 +222,60 @@
                     android:padding="15dp"
                     android:textColor="#191919"
                     android:textColorHint="#696969"
-
                     android:textStyle="bold" />
-
                 <RelativeLayout
                     android:id="@+id/relativeTelefon"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="40dp"
+                    android:layout_marginEnd="40dp"
+                    android:background="#696969" />
+
+
+                <RadioGroup
+                    android:id="@+id/groupCinsiyet"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="4dp"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingBottom="15dp">
+
+                    <RadioButton
+                        android:onClick="checkButton"
+                        android:id="@+id/radioErkek"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="5dp"
+                        android:background="#E6F4F1"
+                        android:paddingRight="30dp"
+                        android:text="Erkek"
+                        android:textColor="#000"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:ignore="OnClick" />
+
+                    <RadioButton
+                        android:onClick="checkButton"
+                        android:id="@+id/radioKadin"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="5dp"
+                        android:background="#E778C9"
+                        android:paddingRight="30dp"
+                        android:text="Kadın"
+                        android:textColor="#000"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:ignore="OnClick" />
+                </RadioGroup>
+
+                <RelativeLayout
+                    android:id="@+id/relativeCinsiyet"
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginStart="40dp"
@@ -232,17 +290,15 @@
                     android:layout_marginTop="30dp"
                     android:layout_marginEnd="50dp"
                     android:layout_marginBottom="80dp"
-                    android:background="@drawable/button_signin_background"
+                    android:background="@drawable/bilgilerim_button"
                     android:foreground="?android:attr/selectableItemBackground"
-                    android:text="Devam"
+                    android:text="Oluştur"
                     android:textAllCaps="false"
                     android:textColor="@android:color/white"
                     android:textSize="20sp"
                     android:textStyle="bold" />
+
             </LinearLayout>
-
         </androidx.core.widget.NestedScrollView>
-
     </com.github.captain_miao.optroundcardview.OptRoundCardView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
