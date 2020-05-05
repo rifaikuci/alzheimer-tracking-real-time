@@ -132,6 +132,7 @@ public class Kisi_ekle extends AppCompatActivity {
 
     private void imageTrashClick() {
 
+
         AlertDialog.Builder builder = new AlertDialog.Builder(Kisi_ekle.this);
 
         builder.setTitle("Uyarı");

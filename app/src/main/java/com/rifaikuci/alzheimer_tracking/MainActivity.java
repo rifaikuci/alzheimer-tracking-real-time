@@ -63,8 +63,8 @@ public class MainActivity extends AppCompatActivity {
         btnHarita.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Harita", Toast.LENGTH_SHORT).show();
-            }
+                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
+                startActivity(intent);            }
         });
 
         btnHakkimda.setOnClickListener(new View.OnClickListener() {

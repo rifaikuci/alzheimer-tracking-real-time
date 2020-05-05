@@ -39,7 +39,8 @@ public class Bilgilerim extends AppCompatActivity {
     RadioButton radioButton, radioErkek, radioKadin;
     RadioGroup groupCinsiyet;
     RelativeLayout relativeAdsoyad, relativeImage, relativeAciklama, relativeKonum, relativeMail, relativeTelefon, relativeCinsiyet;
-    String radioCinsiyet, adsoyad, resim, aciklama, mail, telefon, adsoyadElement, aciklamaElement, resimElement, telefonElement, mailElement, cinsiyetElement;
+    String radioCinsiyet, adsoyad, resim, aciklama, mail, telefon, adsoyadElement, aciklamaElement;
+    String resimElement, telefonElement, mailElement, cinsiyetElement, enlemElement, boylamElement;
     int satirSayisi, radioId, idElement;
     LinearLayout linearBack;
     Uri resultUri;
@@ -78,6 +79,8 @@ public class Bilgilerim extends AppCompatActivity {
                 int aciklamaIx = cursor.getColumnIndex("aciklama");
                 int telefonIx = cursor.getColumnIndex("telefon");
                 int mailIx = cursor.getColumnIndex("mail");
+                int enlemIx = cursor.getColumnIndex("enlem");
+                int boylamIx = cursor.getColumnIndex("boylam");
                 int resim = cursor.getColumnIndex("resim");
                 int cinsiyetIx = cursor.getColumnIndex("cinsiyet");
 
@@ -90,15 +93,18 @@ public class Bilgilerim extends AppCompatActivity {
                     telefonElement = cursor.getString(telefonIx);
                     mailElement = cursor.getString(mailIx);
                     cinsiyetElement = cursor.getString(cinsiyetIx);
+                    enlemElement = cursor.getString(enlemIx);
+                    boylamElement = cursor.getString(boylamIx);
                 }
 
                 cursor.close();
                 database.close();
-
+                String konumElement = "Enlem: " + enlemElement.toString() + "\nBoylam: " + boylamElement.toString();
                 txtAdsoyad.setText(adsoyadElement);
                 txtAciklama.setText(aciklamaElement);
                 txtMail.setText(mailElement);
                 txtTelefon.setText(telefonElement);
+                txtKonum.setText(konumElement);
                 image.setImageURI(Uri.parse(resimElement));
 
                 if (cinsiyetElement.equals("Erkek")) {
