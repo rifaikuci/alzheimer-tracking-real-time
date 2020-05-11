@@ -1,8 +1,11 @@
 package com.rifaikuci.alzheimer_tracking;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -32,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     CircleImageView profile_image;
     String adsoyadElement, resimElement;
     int satirSayisi = 0;
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
         transparanEkran();
         variableDesc();
         databaseKontrol();
+        checkForSmsPermission();
+
 
         txtTarih.setText(getCurrentTime().toString());
 
@@ -73,6 +80,22 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Hakkımda", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void checkForSmsPermission() {
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.SEND_SMS) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // Permission not yet granted. Use requestPermissions().
+            // MY_PERMISSIONS_REQUEST_SEND_SMS is an
+            // app-defined int constant. The callback method gets the
+            // result of the request.
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.SEND_SMS},
+                    MY_PERMISSIONS_REQUEST_SEND_SMS);
+        } else {
+            // Permission already granted. Enable the SMS button.
+        }
     }
 
     private void databaseKontrol() {

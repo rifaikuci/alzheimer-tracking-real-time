@@ -7,7 +7,9 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -16,11 +18,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -36,10 +43,13 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -58,27 +68,85 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     int satirSayisi = 0;
     double enlemElement, boylamElement;
     List<Address> addressList;
-
-    final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    Circle circle;
+    LocationListener locationListener;
+    LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         transparanEkran();
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
+
         mGoogleApiClient.connect();
         satirSayisi = databaseKontrol();
 
 
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                mMap.setMyLocationEnabled(true);
+                float[] distance = new float[2];
+
+
+                try {
+
+                       Location.distanceBetween( location.getLatitude(), location.getLongitude(),
+                            circle.getCenter().latitude, circle.getCenter().longitude, distance);
+                    System.out.println("Disand0" +distance[0]);
+                    System.out.println("Disand1" +distance[1]);
+                    if( distance[0] > circle.getRadius() ){
+                        Toast.makeText(getBaseContext(), "Outside, distance from center: " + distance[0] + " radius: " + circle.getRadius(), Toast.LENGTH_LONG).show();
+                           // Buraya Bilgilerimden kişi adı çekilecek ve Kişiler listesinden 3 kişinin numarası çekilip Mesaj olarak gönderilecek tek kalan işlem bu
+/*
+                        SmsManager smsManager = SmsManager.getDefault();
+                        smsManager.sendTextMessage("05379198712",null,"Bu bir deneme mesajı",null,null);
+                        Toast.makeText(getApplicationContext(),"Mesaj gonder",Toast.LENGTH_SHORT).show();
+*/
+                    } else {
+                        Toast.makeText(getBaseContext(), "Inside, distance from center: " + distance[0] + " radius: " + circle.getRadius() , Toast.LENGTH_LONG).show();
+                    }
+
+
+                    Toast.makeText(getApplicationContext(), "Longitude" + location.getLongitude() + "\nLatitude" + location.getLatitude(), Toast.LENGTH_SHORT).show();
+                    System.out.println(location.getLatitude() + location.getLongitude() + "Dneme");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 9000, 0, locationListener);
+
+        }
     }
+
+
 
 
     @Override
@@ -86,23 +154,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mMap = googleMap;
         mMap.setOnMapLongClickListener(this);
-        checkPermissions();//konum izni al
         mMap.clear();
+        try {
+
+            mMap.setMyLocationEnabled(true);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        if (circle != null) {
+            circle.remove();
+        }
         if (satirSayisi > 0) {
 
             try {
                 SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
-
                 String sqlTable = "CREATE TABLE IF NOT EXISTS tblBilgilerim (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         "adsoyad TEXT, aciklama TEXT, mail TEXT, telefon TEXT, resim TEXT, enlem TEXT, boylam TEXT, cinsiyet TEXT)";
                 database.execSQL(sqlTable);
 
                 String countQuery = "SELECT  enlem,boylam FROM  tblBilgilerim";
                 Cursor cursor = database.rawQuery(countQuery, null);
+
                 satirSayisi = cursor.getCount();
                 int enlemIx = cursor.getColumnIndex("enlem");
                 int boylamIx = cursor.getColumnIndex("boylam");
-
 
                 while (cursor.moveToNext()) {
                     enlemElement = Double.parseDouble(cursor.getString(enlemIx));
@@ -111,12 +187,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 cursor.close();
                 database.close();
+
                 geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
 
                 try {
                     addressList = geocoder.getFromLocation(enlemElement, boylamElement, 1);
                     if (addressList != null && addressList.size() > 0) {
-                        address[0] ="";
+                        address[0] = "";
                         if (addressList.get(0).getThoroughfare() != null) {
                             address[0] += addressList.get(0).getThoroughfare();
 
@@ -124,42 +201,108 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 address[0] += addressList.get(0).getSubThoroughfare();
                             }
                         }
-
-
                     }
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 if (address[0].matches("")) {
                     address[0] = "Yer Bilinmiyor";
                 }
 
-                mMap.addMarker(new MarkerOptions().position(new LatLng(enlemElement,boylamElement)).title(address[0])).setIcon(BitmapDescriptorFactory.fromBitmap(convertMarker()));
+                mMap.addMarker(new MarkerOptions().position(new LatLng(enlemElement, boylamElement))
+                        .title(address[0])).setIcon(BitmapDescriptorFactory.fromBitmap(convertMarker()));
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(enlemElement, boylamElement), 10));
+                circle = mMap.addCircle(new CircleOptions()
+                        .center(new LatLng(enlemElement, boylamElement))
+                        .radius(1500)
+                        .strokeColor(Color.WHITE)
+                        .strokeWidth(6f)
+                        .fillColor(Color.argb(70, 48, 213, 200)));
 
-
-
-
-
-                mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-                    @Override
-                    public void onMapLongClick(LatLng latLng) {
-                        yerGuncellemek(latLng);
-                    }
-                });
-
-            }
-            catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
     }
 
 
-    private void yerGuncellemek(final LatLng latLng) {
+    @Override
+    public void onMapLongClick(final LatLng latLng) {
 
+        geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
 
+        if (satirSayisi == 0) {
+            Intent intent = new Intent(getApplicationContext(), Bilgilerim.class);
+            startActivity(intent);
+        } else {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
+            builder.setTitle("Uyarı");
+            builder.setPositiveButton("Evet", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                    try {
+                        mMap.clear();
+                        addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+
+                        if (addressList != null && addressList.size() > 0) {
+                            address[0] = "";
+                            if (addressList.get(0).getThoroughfare() != null) {
+                                address[0] += addressList.get(0).getThoroughfare();
+
+                                if (addressList.get(0).getSubThoroughfare() != null) {
+                                    address[0] += addressList.get(0).getSubThoroughfare();
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (address[0].matches("")) {
+                        address[0] = "Yer Bilinmiyor";
+                    }
+
+                    mMap.addMarker(new MarkerOptions().position(latLng)
+                            .title(address[0])).setIcon(BitmapDescriptorFactory.fromBitmap(convertMarker()));
+                    if (circle != null) {
+                        circle.remove();
+                    }
+                    circle = mMap.addCircle(new CircleOptions()
+                            .center(latLng)
+                            .radius(1500)
+                            .strokeColor(Color.WHITE)
+                            .strokeWidth(6f)
+                            .fillColor(Color.argb(70, 48, 213, 200)));
+
+                    SQLiteDatabase database = openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+                    String sqlTable = "CREATE TABLE IF NOT EXISTS tblBilgilerim (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            "adsoyad TEXT, aciklama TEXT, mail TEXT, telefon TEXT, resim TEXT, enlem TEXT, boylam TEXT, cinsiyet TEXT)";
+                    database.execSQL(sqlTable);
+
+                    String sqlGuncele = "UPDATE tblBilgilerim SET " +
+                            "enlem = '" + String.valueOf(latLng.latitude) + "',boylam='" + String.valueOf(latLng.longitude) + "'";
+
+                    database.execSQL(sqlGuncele);
+                    database.close();
+                }
+            });
+
+            builder.setNegativeButton("Hayır", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Toast.makeText(getApplicationContext(), "Konum adresinizi güncelleme işlemi iptal edildi", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setMessage(address[0] + " Konumunuzu değiştirmek istediğinizden emin misiniz? ");
+
+            AlertDialog alert = builder.create();
+            alert.show();
+        }
     }
 
     private int databaseKontrol() {
@@ -200,7 +343,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    // Konum izinleri için tüm işlevler başlangıç
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -242,7 +385,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 Toast.makeText(MapsActivity.this, "İzin verilmedi", Toast.LENGTH_LONG).show();
             }
-
         }
     }
 
@@ -272,6 +414,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
         result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @SuppressLint("MissingPermission")
             @Override
             public void onResult(LocationSettingsResult result) {
                 final Status status = result.getStatus();
@@ -279,8 +422,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
 
-                        //Konum ayarları etkin ise buraya
-                        Log.d("locationEnable", "SUCCESS");
+
+
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
 
@@ -314,76 +457,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    @Override
-    public void onMapLongClick(final LatLng latLng) {
-        geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
 
-        if (satirSayisi == 0) {
-            Intent intent = new Intent(getApplicationContext(), Bilgilerim.class);
-            startActivity(intent);
-        } else {
-
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(MapsActivity.this);
-            builder.setTitle("Uyarı");
-
-            builder.setPositiveButton("Evet", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                    try {
-
-                        mMap.clear();
-
-                        addressList = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-
-                        if (addressList != null && addressList.size() > 0) {
-                            address[0] ="";
-                            if (addressList.get(0).getThoroughfare() != null) {
-                                address[0] += addressList.get(0).getThoroughfare();
-
-                                if (addressList.get(0).getSubThoroughfare() != null) {
-                                    address[0] += addressList.get(0).getSubThoroughfare();
-                                }
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    if (address[0].matches("")) {
-                        address[0] = "Yer Bilinmiyor";
-                    }
-
-                    mMap.addMarker(new MarkerOptions().position(latLng).title(address[0])).setIcon(BitmapDescriptorFactory.fromBitmap(convertMarker()));
-
-
-                    SQLiteDatabase database = openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
-                    String sqlTable = "CREATE TABLE IF NOT EXISTS tblBilgilerim (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            "adsoyad TEXT, aciklama TEXT, mail TEXT, telefon TEXT, resim TEXT, enlem TEXT, boylam TEXT, cinsiyet TEXT)";
-                    database.execSQL(sqlTable);
-
-                    String sqlGuncele = "UPDATE tblBilgilerim SET " +
-                            "enlem = '" + String.valueOf(latLng.latitude) + "',boylam='" + String.valueOf(latLng.longitude) + "'";
-
-                    database.execSQL(sqlGuncele);
-                    database.close();
-                }
-            });
-
-            builder.setNegativeButton("Hayır", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Toast.makeText(getApplicationContext(), "Konum adresinizi güncelleme işlemi iptal edildi", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            builder.setMessage(address[0] + " Konumunuzu değiştirmek istediğinizden emin misiniz? ");
-
-            AlertDialog alert = builder.create();
-            alert.show();
-        }
-    }
     // Konum izinleri için tüm işlevler bitiş
 }
 
