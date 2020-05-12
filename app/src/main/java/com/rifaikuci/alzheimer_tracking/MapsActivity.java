@@ -7,7 +7,6 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,7 +16,6 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
@@ -54,29 +52,35 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks, GoogleMap.OnMapLongClickListener {
 
-    private static final int REQUEST_CHECK_SETTINGS = 5;
-    private static final int ACCESS_FINE_LOCATION_INTENT_ID = 50;
+    private static final int REQUEST_CHECK_SETTINGS = 0x1;
+    private static GoogleApiClient mGoogleApiClient;
+    private static final int ACCESS_FINE_LOCATION_INTENT_ID = 3;
+
     private GoogleMap mMap;
-    GoogleApiClient mGoogleApiClient;
     Geocoder geocoder;
-    String[] address = {""};
-    int satirSayisi = 0;
-    double enlemElement, boylamElement;
-    List<Address> addressList;
     Circle circle;
     LocationListener locationListener;
     LocationManager locationManager;
+
+    String[] address = {""};
+    int satirSayisi = 0, gonderilmeDurumu;
+    double enlemElement, boylamElement;
+    List<Address> addressList;
+    ArrayList<ModelKisiler> models = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         transparanEkran();
+
+        gonderilmeDurumu = 0;
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -85,10 +89,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this).build();
-
         mGoogleApiClient.connect();
-        satirSayisi = databaseKontrol();
 
+        satirSayisi = databaseKontrol();
 
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -97,28 +100,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMyLocationEnabled(true);
                 float[] distance = new float[2];
 
-
                 try {
-
-                       Location.distanceBetween( location.getLatitude(), location.getLongitude(),
+                    String adSoyad = "";
+                    Location.distanceBetween(location.getLatitude(), location.getLongitude(),
                             circle.getCenter().latitude, circle.getCenter().longitude, distance);
-                    System.out.println("Disand0" +distance[0]);
-                    System.out.println("Disand1" +distance[1]);
-                    if( distance[0] > circle.getRadius() ){
-                        Toast.makeText(getBaseContext(), "Outside, distance from center: " + distance[0] + " radius: " + circle.getRadius(), Toast.LENGTH_LONG).show();
-                           // Buraya Bilgilerimden kişi adı çekilecek ve Kişiler listesinden 3 kişinin numarası çekilip Mesaj olarak gönderilecek tek kalan işlem bu
-/*
-                        SmsManager smsManager = SmsManager.getDefault();
-                        smsManager.sendTextMessage("05379198712",null,"Bu bir deneme mesajı",null,null);
-                        Toast.makeText(getApplicationContext(),"Mesaj gonder",Toast.LENGTH_SHORT).show();
-*/
+                    if (distance[0] > circle.getRadius()) {
+                        //Eğer çemberin dışında ise
+
+                        if (adSoyadDondur() != "") {
+                            // adsoyad = "Hasta bilgisi adısoyadı alındı
+                            adSoyad = adSoyadDondur();
+
+                        }
+
+                        models = kisilerDondur();
+                        if (!models.isEmpty()) {
+                            try {
+                                for (int i = 0; i < models.size(); i++) {
+
+                                    String mesaj = "";
+
+                                    if (gonderilmeDurumu == 0) {
+
+                                        try {
+                                            mesaj = mesaj + "Merhaba " + models.get(i).getAdSoyad() + " Ben " + adSoyad + " Şu anki konumu mu enlem ve boylam olarak buradan görebilirsin";
+                                            mesaj += " Boylam: " + location.getLatitude() + " Enlem: " + location.getLongitude() + " ";
+                                            mesaj += "Enlem Boylam bilgisini google da kopyalayıp bulabilirsiniz:" + location.getLatitude() + "," + location.getLongitude();
+
+                                            SmsManager smsManager = SmsManager.getDefault();
+                                            smsManager.sendTextMessage(models.get(i).getTelefon(), null, mesaj, null, null);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                    gonderilmeDurumu = 1;
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                     } else {
-                        Toast.makeText(getBaseContext(), "Inside, distance from center: " + distance[0] + " radius: " + circle.getRadius() , Toast.LENGTH_LONG).show();
+                        //Eğer çemberin içinde yer alacaksa işlem yapılacaksa burada yapılacaktır.
                     }
-
-
-                    Toast.makeText(getApplicationContext(), "Longitude" + location.getLongitude() + "\nLatitude" + location.getLatitude(), Toast.LENGTH_SHORT).show();
-                    System.out.println(location.getLatitude() + location.getLongitude() + "Dneme");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -140,14 +164,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 9000, 0, locationListener);
-
         }
     }
-
-
-
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -155,19 +176,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.setOnMapLongClickListener(this);
         mMap.clear();
-        try {
 
+        //google izinleri
+        initGoogleAPIClient();
+        checkPermissions();
+        //bu ikisi alundığında izinlerin çağrılma işlemleri tamamlanacak
+
+        try {
             mMap.setMyLocationEnabled(true);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
         if (circle != null) {
             circle.remove();
         }
+
         if (satirSayisi > 0) {
 
             try {
+
                 SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
                 String sqlTable = "CREATE TABLE IF NOT EXISTS tblBilgilerim (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         "adsoyad TEXT, aciklama TEXT, mail TEXT, telefon TEXT, resim TEXT, enlem TEXT, boylam TEXT, cinsiyet TEXT)";
@@ -191,9 +219,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
 
                 try {
+
                     addressList = geocoder.getFromLocation(enlemElement, boylamElement, 1);
+
                     if (addressList != null && addressList.size() > 0) {
                         address[0] = "";
+
                         if (addressList.get(0).getThoroughfare() != null) {
                             address[0] += addressList.get(0).getThoroughfare();
 
@@ -226,7 +257,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
-
 
     @Override
     public void onMapLongClick(final LatLng latLng) {
@@ -343,103 +373,68 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private ArrayList<ModelKisiler> kisilerDondur() {
+        ArrayList<ModelKisiler> kisiler = new ArrayList<>();
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CHECK_SETTINGS) {
+        try {
+            SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
 
-            if (resultCode == RESULT_OK) {
+            String sqlTable = "CREATE TABLE IF NOT EXISTS tblKisiler (id INTEGER PRIMARY KEY AUTOINCREMENT,adSoyad TEXT, aciklama TEXT, mail TEXT, telefon TEXT, resim TEXT)";
+            database.execSQL(sqlTable);
 
-                Toast.makeText(MapsActivity.this, "GPS Aktif", Toast.LENGTH_LONG).show();
+            Cursor cursor = database.rawQuery("Select * From tblKisiler ORDER BY id DESC LIMIT 3", null);
+
+            int adSoyadIx = cursor.getColumnIndex("adSoyad");
+            int telefonIx = cursor.getColumnIndex("telefon");
+            int mailIx = cursor.getColumnIndex("mail");
+
+            while (cursor.moveToNext()) {
+                kisiler.add(new ModelKisiler(
+                        cursor.getString(adSoyadIx),
+                        cursor.getString(telefonIx),
+                        cursor.getString(mailIx)));
+            }
+
+            cursor.close();
+            database.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return kisiler;
+    }
+
+    private String adSoyadDondur() {
+        String adsoyad = "";
+        String adsoyadElement = "";
+        try {
+            SQLiteDatabase database = this.openOrCreateDatabase("alzheimer", MODE_PRIVATE, null);
+
+            String sqlTable = "CREATE TABLE IF NOT EXISTS tblBilgilerim (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "adsoyad TEXT, aciklama TEXT, mail TEXT, telefon TEXT, resim TEXT, enlem TEXT, boylam TEXT, cinsiyet TEXT)";
+            database.execSQL(sqlTable);
+
+            String countQuery = "SELECT  * FROM  tblBilgilerim";
+            Cursor cursor = database.rawQuery(countQuery, null);
+            int satirSayisi = cursor.getCount();
+            int adSoyadIx = cursor.getColumnIndex("adsoyad");
+
+            while (cursor.moveToNext()) {
+                adsoyadElement = cursor.getString(adSoyadIx);
+            }
+
+            if (satirSayisi == 0) {
+                adsoyad = "";
             } else {
+                adsoyad = adsoyadElement.toString();
 
-                Toast.makeText(MapsActivity.this, "GPS Pasif", Toast.LENGTH_LONG).show();
             }
+            cursor.close();
+            database.close();
 
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-    }
-
-    /*  Konum izni için User Permission  */
-    private void requestLocationPermission() {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(MapsActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-            ActivityCompat.requestPermissions(MapsActivity.this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    ACCESS_FINE_LOCATION_INTENT_ID);
-
-        } else {
-            ActivityCompat.requestPermissions(MapsActivity.this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    ACCESS_FINE_LOCATION_INTENT_ID);
-        }
-    }
-
-    // izin cevapları
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == ACCESS_FINE_LOCATION_INTENT_ID) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(MapsActivity.this, "İzin verildi", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(MapsActivity.this, "İzin verilmedi", Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
-    /* Versiyon Kontroller */
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= 23) {
-            if (ContextCompat.checkSelfPermission(MapsActivity.this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED)
-                requestLocationPermission();
-            else
-                showLocationState();
-        } else
-            showLocationState();
-
-    }
-
-    private void showLocationState() {
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);//Setting priotity of Location request to high
-        locationRequest.setInterval(30 * 1000);
-        locationRequest.setFastestInterval(5 * 1000);//5 sec Time interval for location update
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
-                .addLocationRequest(locationRequest);
-        builder.setAlwaysShow(true); //this is the key ingredient to show dialog always when GPS is off
-
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
-            @SuppressLint("MissingPermission")
-            @Override
-            public void onResult(LocationSettingsResult result) {
-                final Status status = result.getStatus();
-                final LocationSettingsStates state = result.getLocationSettingsStates();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-
-
-
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-
-                        try {
-                            // startResolutionForResult(), çağırıp kontrol edilir
-                            status.startResolutionForResult(MapsActivity.this, REQUEST_CHECK_SETTINGS);
-                        } catch (IntentSender.SendIntentException e) {
-                            e.printStackTrace();
-                        }
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        Log.d("locationEnable", "SETTINGS_CHANGE_UNAVAILABLE");
-                        break;
-                }
-            }
-        });
+        return adsoyad;
     }
 
     @Override
@@ -458,6 +453,113 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    //  Konum izni için User Permission
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == ACCESS_FINE_LOCATION_INTENT_ID) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(MapsActivity.this, "İzin verildi", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(MapsActivity.this, "İzin verilmedi", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+
+            if (resultCode == RESULT_OK) {
+
+                Toast.makeText(MapsActivity.this, "GPS Aktif", Toast.LENGTH_LONG).show();
+            } else {
+
+                Toast.makeText(MapsActivity.this, "GPS Pasif", Toast.LENGTH_LONG).show();
+            }
+
+        }
+    }
+
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (ContextCompat.checkSelfPermission(MapsActivity.this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED)
+                requestLocationPermission();
+            else
+                showLocationState();
+        } else
+            showLocationState();
+
+    }
+
+    private void requestLocationPermission() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(MapsActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+            ActivityCompat.requestPermissions(MapsActivity.this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    ACCESS_FINE_LOCATION_INTENT_ID);
+
+        } else {
+            ActivityCompat.requestPermissions(MapsActivity.this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    ACCESS_FINE_LOCATION_INTENT_ID);
+        }
+    }
+
+    private void initGoogleAPIClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(MapsActivity.this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    private void showLocationState() {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);//Setting priotity of Location request to high
+        locationRequest.setInterval(30 * 1000);
+        locationRequest.setFastestInterval(5 * 1000);//5 sec Time interval for location update
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true); //this is the key ingredient to show dialog always when GPS is off
+
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                final LocationSettingsStates state = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        //Konum ayarları etkin ise buraya
+                        // istekler burda
+                        //updateGPSStatus("GPS is Enabled in your device");
+                        Log.d("locationEnable", "SUCCESS");
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Konum ayarları etkin değil fakat dialog gösterip konum açılmasını sağlıyor isek buraya
+                        // Dialog göster
+                        try {
+                            // startResolutionForResult(), çağırıp kontrol edilir
+                            Log.d("locationEnable", "RESOLUTION_REQUIRED");
+                            status.startResolutionForResult(MapsActivity.this, REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            e.printStackTrace();
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Konum eğer açılamıyor ise buraya düşer
+                        Log.d("locationEnable", "SETTINGS_CHANGE_UNAVAILABLE");
+                        break;
+                }
+            }
+        });
+    }
     // Konum izinleri için tüm işlevler bitiş
 }
 

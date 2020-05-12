@@ -9,6 +9,12 @@ public class ModelKisiler {
     private String resim;
     private int id;
 
+    public ModelKisiler(String adSoyad, String telefon, String mail) {
+        this.adSoyad = adSoyad;
+        this.telefon = telefon;
+        this.mail = mail;
+    }
+
     public ModelKisiler(int id, String adSoyad, String aciklama, String resim) {
         this.adSoyad = adSoyad;
         this.aciklama = aciklama;

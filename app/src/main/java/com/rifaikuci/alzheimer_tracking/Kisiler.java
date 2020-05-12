@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -22,12 +23,15 @@ public class Kisiler extends AppCompatActivity {
     Adapter adapter;
     List<ModelKisiler> models;
     FloatingActionButton btnKisiEkle;
+    LinearLayout linearBack;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_kisiler);
         transparanEkran();
+        linearBack = (LinearLayout) findViewById(R.id.linearBack);
 
         btnKisiEkle = (FloatingActionButton) findViewById(R.id.btnKisiEkle);
 
@@ -86,6 +90,18 @@ public class Kisiler extends AppCompatActivity {
             }
         });
 
+        linearBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                linearBackClick();
+            }
+        });
+
+    }
+
+    private void linearBackClick() {
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivity(intent);
     }
 
     public void transparanEkran() {
